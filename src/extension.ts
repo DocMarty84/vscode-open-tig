@@ -1,27 +1,168 @@
 'use strict';
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
+import { exec } from 'child_process';
+import { platform } from 'os';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+// Utility functions
+function getSettings(name: string): any {
+    const settings = vscode.workspace.getConfiguration('tig', null);
+    return settings.get(name);
+}
+
+function getFilePath(): string|undefined {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return;
+    }
+    return editor.document.fileName;
+}
+
+function getGitPath(filePath: string|undefined): string|undefined {
+    if (!filePath) {
+        return vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0].name;
+    }
+
+    const filePathInfo = path.parse(filePath);
+    let dirPath = filePathInfo.dir;
+    let dirPathSplit = dirPath.split(path.sep);
+
+    while (filePathInfo.root !== dirPath) {
+        if (fs.existsSync(path.join(dirPath, '.git'))) {
+            return dirPath;
+        }
+        dirPathSplit.pop();
+        dirPath = dirPathSplit.join(path.sep);
+    }
+
+    return vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0].name;
+}
+
+function getTerminal(cmd: string, gitPath?: string): string {
+    let terminal = getSettings('terminal.' + platform());
+ 
+    cmd += "\""+ terminal +"\"";
+
+    // For mac, we need to use osascript to force the app to run a command
+    if (platform() === 'darwin') {
+        cmd = "osascript -e 'tell application " + cmd + " to do script \"cd " + gitPath + " && ";
+    }
+    return cmd;
+}
+
+function getMaximize(cmd: string): string {
+    if (getSettings('openMaximize')) {
+        if (platform() === "darwin") {
+            const terminal = getSettings('terminal.' + platform());
+            cmd += " && osascript -e 'tell application \"Finder\"' -e 'set desktopSize to bounds of window of desktop' -e 'end tell' -e 'tell application \"" + terminal + "\"' -e 'set bounds of window 1 to desktopSize' -e 'activate' -e 'end tell'";
+        } else {
+            cmd += " " + getSettings('maximizeArg');
+        }
+    } 
+    return cmd;
+}
+
+function getTig(cmdTig: string): string {
+    cmdTig += "\""+ getSettings('executable') +"\"";
+    return cmdTig;
+}
+
+function getTigFilePath(cmdTig: string, filePath: string): string {
+    if (platform() === 'darwin') {
+        cmdTig += " \\\"" + filePath + "\\\"";
+    } else {
+        cmdTig += " \"" + filePath + "\"";
+    }
+    return cmdTig;
+}
+
+function getTigPosition(cmdTig: string, editor: vscode.TextEditor|undefined): string {
+    if (editor && editor.selection.isEmpty) {
+        cmdTig += " +" + (editor.selection.active.line + 1).toString();
+    }
+    return cmdTig;
+}
+
+function getMergedCmd(cmd: string, cmdTig: string): string {
+    if (platform() === 'darwin') {
+        cmd += cmdTig;
+        cmd += "\" in window 1'";
+        if (getSettings('openMaximize')) {
+            cmd = getMaximize(cmd);
+        }
+    } else {
+        cmd += " -e \'" + cmdTig + "\'";
+    }
+    return cmd;
+}
+
 export function activate(context: vscode.ExtensionContext) {
 
-    // Use the console to output diagnostic information (console.log) and errors (console.error)
-    // This line of code will only be executed once when your extension is activated
-    console.log('Congratulations, your extension "vscode-tig" is now active!');
+    let disposableHistory = vscode.commands.registerCommand('extension.history', () => {
+        const filePath = getFilePath();
+        if (!filePath) {
+            vscode.window.showErrorMessage('File not found');
+            return;
+        }
+        const gitPath = getGitPath(filePath);
+        if (!gitPath) {
+            vscode.window.showErrorMessage('Git directory not found');
+            return;
+        }
 
-    // The command has been defined in the package.json file
-    // Now provide the implementation of the command with  registerCommand
-    // The commandId parameter must match the command field in package.json
-    let disposable = vscode.commands.registerCommand('extension.sayHello', () => {
-        // The code you place here will be executed every time your command is executed
+        // Start assembling the command line
+        let cmd = '';
+        cmd = getTerminal(cmd, gitPath);
+        if (platform() !== "darwin") {
+            cmd = getMaximize(cmd);
+        }
 
-        // Display a message box to the user
-        vscode.window.showInformationMessage('Hello World!');
+        // Build tig part of the command line
+        let cmdTig = '';
+        cmdTig = getTig(cmdTig);
+        cmdTig = getTigFilePath(cmdTig, filePath);
+
+        // Merge both parts and run
+        cmd = getMergedCmd(cmd, cmdTig);
+        console.log('Executing: ', cmd, gitPath);
+        exec(cmd, {cwd: gitPath});
     });
 
-    context.subscriptions.push(disposable);
+    let disposableBlame = vscode.commands.registerCommand('extension.blame', () => {
+        const filePath = getFilePath();
+        if (!filePath) {
+            vscode.window.showErrorMessage('File not found');
+            return;
+        }
+        const gitPath = getGitPath(filePath);
+        if (!gitPath) {
+            vscode.window.showErrorMessage('Git directory not found');
+            return;
+        }
+
+        // Start assembling the command line
+        let cmd = '';
+        cmd = getTerminal(cmd, gitPath);
+        if (platform() !== "darwin") {
+            cmd = getMaximize(cmd);
+        }
+
+        // Build tig part of the command line
+        let cmdTig = '';
+        cmdTig = getTig(cmdTig);
+        cmdTig += " blame";
+        cmdTig = getTigFilePath(cmdTig, filePath);
+        cmdTig = getTigPosition(cmdTig, vscode.window.activeTextEditor);
+
+        // Merge both parts and run
+        cmd = getMergedCmd(cmd, cmdTig);
+        console.log('Executing: ', cmd, gitPath);
+        exec(cmd, {cwd: gitPath});
+    });
+
+    context.subscriptions.push(disposableHistory);
+    context.subscriptions.push(disposableBlame);
 }
 
 // this method is called when your extension is deactivated

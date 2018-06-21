@@ -1,65 +1,37 @@
-# vscode-tig README
+# open-tig
 
-This is the README for your extension "vscode-tig". After writing up a brief description, we recommend including the following sections.
+The open-tig extension provides keybindings to launch Tig or Tig blame on the file opened.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+open-tig opens an external terminal and launches either `tig` or `tig blame` on the file opened. In
+the case of blame, the cursor position is added, so that Tig focuses on the same line.
 
-For example if there is an image subfolder under your extension project workspace:
+This extension contributes the following keybindings:
 
-\!\[feature X\]\(images/feature-x.png\)
+* `ctrl+alt+h`: launch tig
+* `ctrl+alt+b`: launch tig blame
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+`ctrl` is replaced by `cmd` on MacOS.
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
 This extension contributes the following settings:
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+* `tig.terminal.darwin`: terminal application to lauch on MacOS
+* `tig.terminal.linux`: terminal application to launch on Linux
+* `tig.executable`: Tig executable path
+* `tig.openMaximize`: whether the terminal should be opened in full screen
+* `tig.maximizeArg`: the terminal option to launch in full screen
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+The extension doesn't support Windows. It will most likely never be the case.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+open-tig is still in a beta phase.
 
-### 1.0.0
+### 0.0.1
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Initial release

@@ -1,9 +1,18 @@
 {
-    "name": "vscode-tig",
-    "displayName": "vscode-tig",
-    "description": "Open tig in an external terminal",
+    "name": "open-tig",
+    "displayName": "open-tig",
+    "description": "Open Tig or Tig blame on the current file.",
     "version": "0.0.1",
+    "license": "MIT",
     "publisher": "DocMarty",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DocMarty84/vscode-open-tig.git"
+    },
+    "homepage": "https://github.com/DocMarty84/vscode-open-tig",
+    "bugs": {
+        "url": "https://github.com/DocMarty84/vscode-open-tig/issues"
+    },
     "engines": {
         "vscode": "^1.24.0"
     },
@@ -11,14 +20,58 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.sayHello"
+        "onCommand:extension.history",
+        "onCommand:extension.blame"
     ],
     "main": "./out/extension",
     "contributes": {
-        "commands": [{
-            "command": "extension.sayHello",
-            "title": "Hello World"
-        }]
+        "keybindings": [{
+            "command": "extension.history",
+            "key": "ctrl+alt+h",
+            "mac": "cmd+alt+h",
+            "when": "editorTextFocus"
+        }, {
+            "command": "extension.blame",
+            "key": "ctrl+alt+b",
+            "mac": "cmd+alt+b",
+            "when": "editorTextFocus"
+        }],
+        "configuration": {
+            "type": "object",
+            "title": "VS Code tig Configuration",
+            "properties": {
+                "tig.terminal.darwin": {
+                    "type": "string",
+                    "default": "Terminal.app",
+                    "description": "Path of the terminal (MacOS).",
+                    "scope": "resource"
+                },
+                "tig.terminal.linux": {
+                    "type": "string",
+                    "default": "/usr/bin/x-terminal-emulator",
+                    "description": "Path of the terminal (Linux).",
+                    "scope": "resource"
+                },
+                "tig.executable": {
+                    "type": "string",
+                    "default": "tig",
+                    "description": "Path of the tig executable.",
+                    "scope": "resource"
+                },
+                "tig.openMaximize": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Open terminal maximized",
+                    "scope": "resource"
+                },
+                "tig.maximizeArg": {
+                    "type": "string",
+                    "default": "-m",
+                    "description": "For Linux: (1) terminator => -m (2) gnome-terminal => --maximize (3) konsole => --fullscreen",
+                    "scope": "resource"
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
