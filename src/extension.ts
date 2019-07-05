@@ -41,7 +41,7 @@ function getGitPath(filePath: string|undefined): string|undefined {
 
 function getTerminal(cmd: string, gitPath?: string): string {
     let terminal = getSettings('terminal.' + platform());
- 
+
     cmd += "\""+ terminal +"\"";
 
     // For mac, we need to use osascript to force the app to run a command
@@ -59,12 +59,18 @@ function getMaximize(cmd: string): string {
         } else {
             cmd += " " + getSettings('maximizeArg');
         }
-    } 
+    }
     return cmd;
 }
 
 function getTig(cmdTig: string): string {
-    cmdTig += "\""+ getSettings('executable') +"\"";
+    let executable = getSettings('executable');
+    if (platform() === 'darwin') {
+        cmdTig += " \\\"" + executable + "\\\"";
+    }
+    else {
+        cmdTig += "\"" + executable + "\"";
+    }
     return cmdTig;
 }
 
