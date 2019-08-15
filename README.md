@@ -32,6 +32,10 @@ The extension doesn't support Windows. It will most likely never be the case.
 
 open-tig is still in a beta phase.
 
+### 0.0.2
+
+- Fix executable quote escaping on MacOS
+
 ### 0.0.1
 
-Initial release
+- Initial release
