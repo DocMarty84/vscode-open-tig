@@ -2,7 +2,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
+import { ChildProcess, exec } from 'child_process';
 import { platform } from 'os';
 
 // Utility functions
@@ -103,6 +103,20 @@ function getMergedCmd(cmd: string, cmdTig: string): string {
     return cmd;
 }
 
+function handleProcessError(process: ChildProcess, cmd: string): void {
+    process.addListener("exit", (code: number, signal: string) => {
+        if (code === 0 && signal === null) return;
+
+        let message = `\`${cmd}\``;
+        if (signal !== null) {
+            message += ` was killed by ${signal}`;
+        } else {
+            message += ` exited with code ${code}`;
+        }
+        vscode.window.showErrorMessage(message);
+    });
+}
+
 export function activate(context: vscode.ExtensionContext) {
 
     let disposableHistory = vscode.commands.registerCommand('extension.history', () => {
@@ -132,7 +146,8 @@ export function activate(context: vscode.ExtensionContext) {
         // Merge both parts and run
         cmd = getMergedCmd(cmd, cmdTig);
         console.log('Executing: ', cmd, gitPath);
-        exec(cmd, {cwd: gitPath});
+        let process = exec(cmd, {cwd: gitPath});
+        handleProcessError(process, cmd);
     });
 
     let disposableBlame = vscode.commands.registerCommand('extension.blame', () => {
@@ -164,7 +179,8 @@ export function activate(context: vscode.ExtensionContext) {
         // Merge both parts and run
         cmd = getMergedCmd(cmd, cmdTig);
         console.log('Executing: ', cmd, gitPath);
-        exec(cmd, {cwd: gitPath});
+        let process = exec(cmd, {cwd: gitPath});
+        handleProcessError(process, cmd);
     });
 
     context.subscriptions.push(disposableHistory);
