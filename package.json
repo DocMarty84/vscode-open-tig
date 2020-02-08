@@ -2,7 +2,7 @@
   "name": "open-tig",
   "displayName": "open-tig",
   "description": "Open Tig or Tig blame on the current file.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MIT",
   "publisher": "DocMarty",
   "repository": {
